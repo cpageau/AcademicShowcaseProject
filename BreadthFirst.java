@@ -4,8 +4,9 @@ import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
-import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Scanner;
 
 /**
@@ -63,7 +64,7 @@ class PQEntry implements Comparable<PQEntry> {
  *
  * @author Jim Teresco
  */
-public class Dijkstra {
+public class BreadthFirst {
 
     public static final boolean DEBUG = true;
     
@@ -121,7 +122,7 @@ public class Dijkstra {
 	Map<String,HighwayEdge> result = new HashMap<String,HighwayEdge>();
 
 	// construct the priority queue
-	PriorityQueue<PQEntry> pq = new PriorityQueue<PQEntry>();
+	Queue<PQEntry> pq = new LinkedList<PQEntry>();
 
 	// mark all vertices as unvisited
 	g.markAllUnvisited();
@@ -153,7 +154,7 @@ public class Dijkstra {
 	    PQEntry nextPQ = null;
 	    do {
 		// take a value from the PQ
-		nextPQ = pq.remove();
+		nextPQ = pq.poll();
 		nextEdge = nextPQ.lastEdge;
 		if (DEBUG) {
 		    System.out.println("pq.remove(): " + nextPQ.totalDist + ", edge to " + g.vertices[nextEdge.dest].label + ", visited=" + g.vertices[nextEdge.dest].visited);
@@ -182,7 +183,7 @@ public class Dijkstra {
 			if (DEBUG) {
 			    System.out.println("pq.add(" + (nextPQ.totalDist + e.length) + ", edge to " + g.vertices[e.dest].label + " via " + e.label + ")");
 			}
-			pq.add(new PQEntry(nextPQ.totalDist + e.length, e));
+			pq.add(new PQEntry(nextPQ.totalDist + 1, e));
 		    }
 		    e = e.next;
 		}
