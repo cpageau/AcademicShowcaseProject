@@ -1,0 +1,13 @@
+## Chosen Algorithms and Why
+
+Our project aims to improve the U.S. railway system so that all areas of the country are within a specific, reasonable distance of a station by adding as few new stations as possible. To do that, we will use two main algorithms: Dijkstra’s Algorithm and the Greedy Set Cover algorithm.
+
+Dijkstra’s algorithm focuses on finding shortest-path distances in a graph. For each possible station location, we will run Dijkstra’s algorithm to determine the shortest distances from that station to all other nodes in the railway network. We then collect all locations within a chosen distance threshold, giving us the set of areas a station can reasonably serve. This is necessary because railways follow tracks that contain twists and turns rather than straight-line paths at all times, so direct distance measurements wouldn’t accurately reflect actual travel along the network. From this, we will receive a list of what locations are covered by each station (i.e., station A covers locations 2 and 3 while station B covers 1, 2, and 3). This forms the foundation for the next step.
+
+The Set Cover problem is an optimization problem that asks for the minimum number of sets needed to cover all elements in a universe. In terms of this project, we’re looking for the minimum number of train stations needed to cover all specified locations in the US. By using the Greedy Set Cover algorithm, we can find the most efficient approximation. The algorithm iteratively selects the candidate station that covers the largest number of uncovered locations, marks those areas as covered, and repeats the process until all locations are covered. The result is a selected subset of station locations that minimizes the total number of stations needed.
+
+Together, these two algorithms allow us to determine what each candidate station can cover and then decide which ones should be built. Another way to see it is that Dijkstra’s algorithm determines the coverage of each station based on real travel distance, while the greedy set cover algorithm selects the most efficient combination of those stations. With this approach, we can propose efficient improvements to the existing railway network by identifying and covering the gaps that exist with the fewest possible additions.
+
+
+## Before Implementing the Algorithms
+The method of determining these potential new nodes in areas of the graph that are lacking in train stations is to be determined. A possible method could be as simple as overlaying a grid on the map and using each grid point as a potential station. This is a standard technique for spatial optimization and computational geography, while also being simple to implement without taking away from the algorithms that follow.
