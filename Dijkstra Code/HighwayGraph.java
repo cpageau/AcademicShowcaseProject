@@ -41,11 +41,15 @@ public class HighwayGraph
 
         // read header line -- for now assume it's OK, but should
         // check
-        s.nextLine();
+     String header = s.nextLine();
+boolean traveledFile = header.contains("traveled");
 
-        // read number of vertices and edges
-        int numVertices = s.nextInt();
-        numEdges = s.nextInt();
+int numVertices = s.nextInt();
+numEdges = s.nextInt();
+
+if (traveledFile) {
+    s.nextInt(); // skip number of travelers
+}
 
         // construct our array of Vertices
         vertices = new HighwayVertex[numVertices];
@@ -64,10 +68,21 @@ public class HighwayGraph
             // shape points take us to the end of the line, and this
             // will be just a new line char if there are none for this edge
             String shapePointText = s.nextLine().trim();
-            String[] shapePointStrings = shapePointText.split(" ");
+
+if (traveledFile && shapePointText.length() > 0) {
+    String[] parts = shapePointText.split(" ", 2);
+
+    if (parts.length == 2) {
+        shapePointText = parts[1];
+    } else {
+        shapePointText = "";
+    }
+}
+
+String[] shapePointStrings = shapePointText.split(" ");
             LatLng v1Tov2[] = null;
             LatLng v2Tov1[] = null;
-            if (shapePointStrings.length > 1) {
+            if (shapePointText.length() > 0 && shapePointStrings.length > 1)  {
                 // build arrays in both orders
                 v1Tov2 = new LatLng[shapePointStrings.length/2];
                 v2Tov1 = new LatLng[shapePointStrings.length/2];
