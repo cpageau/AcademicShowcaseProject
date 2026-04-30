@@ -7,8 +7,8 @@ public class GreedySetCover {
 
     public static void main(String[] args) throws IOException {
 
-        if (args.length != 2) {
-            System.err.println("Usage: java GreedySetCover graphfile output.pth");
+        if (args.length != 3) {
+            System.err.println("Usage: java GreedySetCover graphfile output.pth output.tmg");
             System.exit(1);
         }
 
@@ -66,7 +66,17 @@ public class GreedySetCover {
             uncovered.remove(g.vertices[bestEdge.dest].label);
         }
 
-        PrintWriter pw = new PrintWriter(args[1]);
+        writePthFile(g, chosenEdges, args[1]);
+        writeTmgFile(g, chosenEdges, args[2]);
+
+        System.out.println("Wrote greedy set cover path to " + args[1]);
+        System.out.println("Wrote greedy set cover graph to " + args[2]);
+        System.out.println("Edges chosen: " + chosenEdges.size());
+    }
+
+    public static void writePthFile(HighwayGraph g, ArrayList<HighwayEdge> chosenEdges, String filename) throws IOException {
+
+        PrintWriter pw = new PrintWriter(filename);
 
         HighwayEdge first = chosenEdges.get(0);
         HighwayVertex start = g.vertices[first.source];
@@ -87,9 +97,32 @@ public class GreedySetCover {
         }
 
         pw.close();
+    }
 
-        System.out.println("Wrote greedy set cover to " + args[1]);
-        System.out.println("Edges chosen: " + chosenEdges.size());
+    public static void writeTmgFile(HighwayGraph g, ArrayList<HighwayEdge> chosenEdges, String filename) throws IOException {
+
+        PrintWriter pw = new PrintWriter(filename);
+
+        pw.println("TMG 1.0");
+        pw.println(g.vertices.length + " " + chosenEdges.size());
+
+        for (HighwayVertex v : g.vertices) {
+            pw.println(v.label + " " + v.point);
+        }
+
+        for (HighwayEdge edge : chosenEdges) {
+            pw.print(edge.source + " " + edge.dest + " " + edge.label);
+
+            if (edge.shapePoints != null) {
+                for (int i = 0; i < edge.shapePoints.length; i++) {
+                    pw.print(" " + edge.shapePoints[i]);
+                }
+            }
+
+            pw.println();
+        }
+
+        pw.close();
     }
 
     public static <T> List<Set<T>> findCover(Set<T> universe, List<Set<T>> sets) {
