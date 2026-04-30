@@ -7,8 +7,8 @@ public class GreedySetCover {
 
     public static void main(String[] args) throws IOException {
 
-        if (args.length != 3) {
-            System.err.println("Usage: java GreedySetCover graphfile output.pth output.tmg");
+        if (args.length != 5) {
+            System.err.println("Usage: java GreedySetCover graphfile startVertex endVertex output.pth output.tmg");
             System.exit(1);
         }
 
@@ -16,70 +16,95 @@ public class GreedySetCover {
         HighwayGraph g = new HighwayGraph(s);
         s.close();
 
-        Set<String> uncovered = new HashSet<>();
+        HighwayVertex start = getVertexByName(g, args[1]);
+        HighwayVertex end = getVertexByName(g, args[2]);
 
-        for (HighwayVertex v : g.vertices) {
-            uncovered.add(v.label);
+        if (start == null) {
+            System.err.println("No vertex found with label " + args[1]);
+            System.exit(1);
+        }
+
+        if (end == null) {
+            System.err.println("No vertex found with label " + args[2]);
+            System.exit(1);
         }
 
         ArrayList<HighwayEdge> chosenEdges = new ArrayList<>();
+        Set<Integer> visited = new HashSet<>();
 
-        while (!uncovered.isEmpty()) {
+        int current = getVertexIndex(g, start.label);
+        int endIndex = getVertexIndex(g, end.label);
+
+        visited.add(current);
+
+        while (current != endIndex) {
 
             HighwayEdge bestEdge = null;
-            int bestCount = 0;
+            int bestNext = -1;
+            double bestLength = Double.POSITIVE_INFINITY;
 
-            for (HighwayVertex v : g.vertices) {
-                HighwayEdge e = v.head;
+            HighwayEdge e = g.vertices[current].head;
 
-                while (e != null) {
-                    int count = 0;
+            while (e != null) {
 
-                    String sourceLabel = g.vertices[e.source].label;
-                    String destLabel = g.vertices[e.dest].label;
+                int next;
 
-                    if (uncovered.contains(sourceLabel)) {
-                        count++;
-                    }
-
-                    if (uncovered.contains(destLabel)) {
-                        count++;
-                    }
-
-                    if (count > bestCount) {
-                        bestCount = count;
-                        bestEdge = e;
-                    }
-
-                    e = e.next;
+                if (e.source == current) {
+                    next = e.dest;
+                } else {
+                    next = e.source;
                 }
+
+                if (!visited.contains(next) && e.length < bestLength) {
+                    bestLength = e.length;
+                    bestEdge = e;
+                    bestNext = next;
+                }
+
+                e = e.next;
             }
 
             if (bestEdge == null) {
-                System.err.println("Could not cover remaining vertices: " + uncovered);
+                System.err.println("Could not reach " + end.label + " from " + start.label);
                 System.exit(1);
             }
 
             chosenEdges.add(bestEdge);
-
-            uncovered.remove(g.vertices[bestEdge.source].label);
-            uncovered.remove(g.vertices[bestEdge.dest].label);
+            current = bestNext;
+            visited.add(current);
         }
 
-        writePthFile(g, chosenEdges, args[1]);
-        writeTmgFile(g, chosenEdges, args[2]);
+        writePthFile(g, chosenEdges, start, args[3]);
+        writeTmgFile(g, chosenEdges, args[4]);
 
-        System.out.println("Wrote greedy set cover path to " + args[1]);
-        System.out.println("Wrote greedy set cover graph to " + args[2]);
+        System.out.println("Start vertex: " + start.label);
+        System.out.println("End vertex: " + end.label);
+        System.out.println("Wrote greedy path to " + args[3]);
+        System.out.println("Wrote greedy path graph to " + args[4]);
         System.out.println("Edges chosen: " + chosenEdges.size());
     }
 
-    public static void writePthFile(HighwayGraph g, ArrayList<HighwayEdge> chosenEdges, String filename) throws IOException {
+    public static HighwayVertex getVertexByName(HighwayGraph g, String name) {
+        for (HighwayVertex v : g.vertices) {
+            if (v.label.equals(name)) {
+                return v;
+            }
+        }
+        return null;
+    }
+
+    public static int getVertexIndex(HighwayGraph g, String name) {
+        for (int i = 0; i < g.vertices.length; i++) {
+            if (g.vertices[i].label.equals(name)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static void writePthFile(HighwayGraph g, ArrayList<HighwayEdge> chosenEdges, HighwayVertex start, String filename) throws IOException {
 
         PrintWriter pw = new PrintWriter(filename);
-
-        HighwayEdge first = chosenEdges.get(0);
-        HighwayVertex start = g.vertices[first.source];
 
         pw.println("START " + start.label + " " + start.point);
 
@@ -103,8 +128,8 @@ public class GreedySetCover {
 
         PrintWriter pw = new PrintWriter(filename);
 
-        pw.println("TMG 1.0");
-        pw.println(g.vertices.length + " " + chosenEdges.size());
+        pw.println("TMG 2.0 traveled");
+        pw.println(g.vertices.length + " " + chosenEdges.size() + " 0");
 
         for (HighwayVertex v : g.vertices) {
             pw.println(v.label + " " + v.point);
@@ -123,39 +148,5 @@ public class GreedySetCover {
         }
 
         pw.close();
-    }
-
-    public static <T> List<Set<T>> findCover(Set<T> universe, List<Set<T>> sets) {
-        Set<T> uncovered = new HashSet<>(universe);
-        List<Set<T>> cover = new ArrayList<>();
-
-        while (!uncovered.isEmpty()) {
-            Set<T> bestSet = null;
-            int bestCount = 0;
-
-            for (Set<T> set : sets) {
-                int count = 0;
-
-                for (T item : set) {
-                    if (uncovered.contains(item)) {
-                        count++;
-                    }
-                }
-
-                if (count > bestCount) {
-                    bestCount = count;
-                    bestSet = set;
-                }
-            }
-
-            if (bestSet == null) {
-                throw new IllegalArgumentException("Some items cannot be covered: " + uncovered);
-            }
-
-            cover.add(bestSet);
-            uncovered.removeAll(bestSet);
-        }
-
-        return cover;
     }
 }
